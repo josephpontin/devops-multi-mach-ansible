@@ -1,0 +1,80 @@
+---
+- hosts: app
+  become: yes
+  #DB_HOST: mongodb://192.168.10.150:27017/posts
+  tasks:
+  - name: Update and upgrade apt packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+  - name: Install nginx, git
+    apt:
+      pkg:
+      - nginx
+      - git
+      - python-software-properties
+
+  - name: Add Nodesource Keys
+    become: yes
+    apt_key:
+      url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+      state: present
+
+  - name: Add Nodesource Apt Sources
+    become: yes
+    apt_repository:
+      repo: '{{ item }}'
+      state: present
+    with_items:
+      - 'deb https://deb.nodesource.com/node_6.x xenial main'
+      - 'deb-src https://deb.nodesource.com/node_6.x xenial main'
+
+  - name: Install NodeJS and NPM
+    become: yes
+    apt:
+      name: ['nodejs']
+      state: latest
+      update_cache: yes
+
+  - name: Install pm2
+    npm: name=pm2 global=yes production=yes
+
+
+
+
+- hosts: db
+  become: yes
+  tasks:
+  - name: get apt key
+    apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=EA312927
+
+  - name: Add MongoDB repository
+    apt_repository: repo='deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse' state=present
+
+  - name: install mongo db
+    apt:
+      name: [mongodb-org=3.2.20, mongodb-org-server=3.2.20, mongodb-org-shell=3.2.20, mongodb-org-mongos=3.2.20, mongodb-org-tools=3.2.20]
+      update_cache: yes
+      force: yes
+      allow_unauthenticated: yes
+
+
+  - name: Remove file
+    file:
+      path: /etc/mongod.conf
+      state: absent
+
+  - name: Create a symbolic link
+    file:
+      src: /home/ubuntu/environment/mongod.conf
+      dest: /etc/mongod.conf
+      state: link
+
+  - name: restart mongodb
+    service: name=mongod state=restarted
+
+  - name: enable service mongod and ensure it is not masked
+    systemd:
+      name: mongod
+      enabled: yes
+      masked: no
