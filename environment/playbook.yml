@@ -7,6 +7,7 @@
     apt:
       upgrade: yes
       update_cache: yes
+
   - name: Install nginx, git
     apt:
       pkg:
@@ -40,8 +41,6 @@
     npm: name=pm2 global=yes production=yes
 
 
-
-
 - hosts: db
   become: yes
   tasks:
@@ -57,7 +56,6 @@
       update_cache: yes
       force: yes
       allow_unauthenticated: yes
-
 
   - name: Remove file
     file:

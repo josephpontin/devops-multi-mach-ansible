@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
     db.hostsupdater.aliases = ["database.local"]
     db.vm.synced_folder "environment/db", "/home/ubuntu/environment"
   end
+  
   config.vm.provision "ansible_local" do |ansible|
     ansible.playbook = "environment/playbook.yml"
   end
